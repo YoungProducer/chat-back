@@ -17,9 +17,14 @@ export type Credentials = {
   password: string;
 };
 
-export type CredentialsForChangeId = {
-  id: string;
-  email: string;
+export type CredentialsForPatch = {
+  id: number;
+  password?: string;
+  newPassword?: string;
+  email?: string;
+  tag?: string;
+  firstName?: string;
+  lastName?: string;
 };
 
 export class UserRepository extends DefaultCrudRepository<

@@ -8,9 +8,9 @@ export const UserProfileSchema = {
   type: "object",
   required: ["id"],
   properties: {
-    id: { type: "string" },
-    email: { type: "string" },
-    name: { type: "string" },
+    id: {type: "number"},
+    email: {type: "string"},
+    name: {type: "string"},
   },
 };
 
@@ -38,30 +38,49 @@ export const CredentialsRequestBody = {
   description: "The input of login function",
   required: true,
   content: {
-    "application/json": { schema: CredentialsSchema },
+    "application/json": {schema: CredentialsSchema},
   },
 };
 
-const ChangeIdCredentialsSchema = {
+const PatchingCredentialsSchema = {
   type: "object",
-  required: ["id", "email"],
+  required: ["id"],
   properties: {
     id: {
-      type: "string",
+      type: "number",
     },
     email: {
       type: "string",
-      format: "email"
-    }
+      format: "email",
+    },
+    password: {
+      type: "string",
+      pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,512})",
+      minLength: 8,
+    },
+    newPassword: {
+      type: "string",
+      pattern: "^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{5,512})",
+      minLength: 8,
+    },
+    tag: {
+      type: "string",
+    },
+    firstName: {
+      type: "string",
+    },
+    lastName: {
+      type: "string",
+    },
   },
 };
 
-export const ChangeIdRequestBody = {
+export const PatchingRequestBody = {
   description: "The input of function for change id",
   required: true,
   content: {
     "application/json": {
-      schema: ChangeIdCredentialsSchema,
+      schema: PatchingCredentialsSchema,
     },
   },
 };

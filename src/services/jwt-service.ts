@@ -10,10 +10,6 @@ import {TokenService} from "@loopback/authentication";
 import {UserProfile, securityId} from "@loopback/security";
 import {TokenServiceBindings} from "../keys";
 
-const jose = require("@panva/jose");
-
-const sign = promisify(jose.JWT.sign);
-
 const jwt = require("jsonwebtoken");
 const signAsync = promisify(jwt.sign);
 const verifyAsync = promisify(jwt.verify);

@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import { Entity, model, property, hasMany } from "@loopback/repository";
-import { Order } from "./order.model";
+import {Entity, model, property, hasMany} from "@loopback/repository";
+import {Order} from "./order.model";
 
 @model({
   settings: {
@@ -17,19 +17,28 @@ import { Order } from "./order.model";
           unique: true,
         },
       },
+      uniqueTag: {
+        keys: {
+          tag: 1,
+        },
+        options: {
+          unique: true,
+        },
+      },
     },
   },
 })
 export class User extends Entity {
   @property({
-    type: "string",
+    type: "number",
+    generated: true,
+    id: true,
   })
-  id: string;
+  id: number;
 
   @property({
     type: "string",
     required: true,
-    id: true
   })
   email: string;
 
@@ -38,6 +47,11 @@ export class User extends Entity {
     required: true,
   })
   password: string;
+
+  @property({
+    type: "string",
+  })
+  tag?: string;
 
   @property({
     type: "string",

@@ -3,25 +3,36 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import { repository } from "@loopback/repository";
-import { validateCredentials } from "../services/validator";
-import { post, param, get, patch, requestBody, HttpErrors, getModelSchemaRef } from "@loopback/rest";
-import { User } from "../models";
-import { UserRepository } from "../repositories";
-import { inject } from "@loopback/core";
+import {repository} from "@loopback/repository";
+import {validateCredentials} from "../services/validator";
+import {
+  post,
+  param,
+  get,
+  patch,
+  requestBody,
+  HttpErrors,
+  getModelSchemaRef,
+} from "@loopback/rest";
+import {User} from "../models";
+import {UserRepository} from "../repositories";
+import {inject} from "@loopback/core";
 import {
   authenticate,
   TokenService,
   UserService,
 } from "@loopback/authentication";
-import { UserProfile, securityId, SecurityBindings } from "@loopback/security";
+import {UserProfile, securityId, SecurityBindings} from "@loopback/security";
 import {
   CredentialsRequestBody,
-  ChangeIdRequestBody,
+  PatchingRequestBody,
   UserProfileSchema,
 } from "./specs/user-controller.specs";
-import { Credentials, CredentialsForChangeId } from "../repositories/user.repository";
-import { PasswordHasher } from "../services/hash.password.bcryptjs";
+import {
+  Credentials,
+  CredentialsForPatch,
+} from "../repositories/user.repository";
+import {PasswordHasher} from "../services/hash.password.bcryptjs";
 
 import {
   TokenServiceBindings,
@@ -29,7 +40,7 @@ import {
   UserServiceBindings,
 } from "../keys";
 import * as _ from "lodash";
-import { UserServicePatching } from "../services/user-service-patching";
+import {UserServicePatching} from "../services/user-service-patching";
 
 export class UserController {
   constructor(
@@ -41,8 +52,8 @@ export class UserController {
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: UserService<User, Credentials>,
     @inject(UserServiceBindings.USER_SERVICE_FOR_PATCHING)
-    public userServicePatching: UserServicePatching
-  ) { }
+    public userServicePatching: UserServicePatching,
+  ) {}
 
   @post("/users", {
     responses: {
@@ -58,7 +69,17 @@ export class UserController {
       },
     },
   })
-  async create(@requestBody() user: User): Promise<User> {
+  async create(
+    @requestBody({
+      description: "The input of user registration",
+      content: {
+        "application/json": {
+          schema: getModelSchemaRef(User, {exclude: ["id"]}),
+        },
+      },
+    })
+    user: Omit<User, "id">,
+  ): Promise<User> {
     // ensure a valid email value and password value
     validateCredentials(_.pick(user, ["email", "password"]));
 
@@ -96,9 +117,9 @@ export class UserController {
       },
     },
   })
-  async findById(@param.path.string("userId") userId: string): Promise<User> {
+  async findById(@param.path.string("userId") userId: number): Promise<User> {
     return this.userRepository.findById(userId, {
-      fields: { password: false },
+      fields: {password: false},
     });
   }
 
@@ -147,7 +168,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{ token: string }> {
+  ): Promise<{token: string}> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
 
@@ -157,48 +178,35 @@ export class UserController {
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
 
-    return { token };
+    return {token};
   }
 
-  @patch("/users/changeid", {
+  @patch("/users", {
     responses: {
       "204": {
         description: "Change user tag",
         content: {
           "application/json": {
-            schema: UserProfileSchema,
+            schema: PatchingRequestBody,
           },
         },
       },
     },
   })
-  @authenticate('jwt')
+  @authenticate("jwt")
   async changeId(
-    @requestBody(ChangeIdRequestBody) credentials: CredentialsForChangeId,
+    @requestBody(PatchingRequestBody)
+    credentials: CredentialsForPatch,
   ): Promise<string> {
-    const user = await this.userServicePatching.verifyCredentialsForChangeId(credentials);
-
-    const filter = {
-      where: { email: user.email }
-    };
+    const verifiedCredentials = await this.userServicePatching.verifyCredentials(
+      credentials,
+    );
 
     try {
-      const foundUser = await this.userRepository.findOne(filter);
-      if (!foundUser) {
-        throw new HttpErrors.Unauthorized('User not found');
-      }
+      delete credentials.id;
+      await this.userRepository.updateById(verifiedCredentials.id, credentials);
+      return "User wat patched successfully";
     } catch (error) {
-      throw error;
-    }
-
-    try {
-
-      // await this.userRepository.updateById(user.email, user);
-      await this.userRepository.updateById(user.email, { id: "jopa" });
-      // await this.userRepository.update(user, filter);
-      return "Tag was updated successfully";
-    }
-    catch (error) {
       throw error;
     }
   }
