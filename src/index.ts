@@ -3,9 +3,9 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {ShoppingApplication} from './application';
-import {ApplicationConfig} from '@loopback/core';
-export {ShoppingApplication, PackageInfo, PackageKey} from './application';
+import { ShoppingApplication } from './application';
+import { ApplicationConfig } from '@loopback/core';
+export { ShoppingApplication, PackageInfo, PackageKey } from './application';
 
 export async function main(options?: ApplicationConfig) {
   const app = new ShoppingApplication(options);

@@ -1,17 +1,18 @@
 {
-  "editor.rulers": [80],
+  "editor.rulers": [
+    80
+  ],
   "editor.tabCompletion": "on",
   "editor.tabSize": 2,
   "editor.trimAutoWhitespace": true,
   "editor.formatOnSave": true,
-
   "files.exclude": {
     "**/.DS_Store": true,
-    "**/.git": true,
+    "**/.git": false,
     "**/.hg": true,
     "**/.svn": true,
     "**/CVS": true,
-    "dist*": true
+    "dist*": false
   },
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,

@@ -2,32 +2,32 @@
 // Node module: @loopback/authentication
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
-import {HttpErrors} from "@loopback/rest";
+import { HttpErrors } from "@loopback/rest";
 import {
   Credentials,
   UserRepository,
   CredentialsForChangeId,
 } from "../repositories/user.repository";
-import {User} from "../models/user.model";
-import {UserService} from "@loopback/authentication";
-import {UserProfile, securityId} from "@loopback/security";
-import {repository} from "@loopback/repository";
-import {PasswordHasher} from "./hash.password.bcryptjs";
-import {PasswordHasherBindings} from "../keys";
-import {inject} from "@loopback/context";
+import { User } from "../models/user.model";
+import { UserService } from "@loopback/authentication";
+import { UserProfile, securityId } from "@loopback/security";
+import { repository } from "@loopback/repository";
+import { PasswordHasher } from "./hash.password.bcryptjs";
+import { PasswordHasherBindings } from "../keys";
+import { inject } from "@loopback/context";
 
 export class MyUserService implements UserService<User, Credentials> {
   constructor(
     @repository(UserRepository) public userRepository: UserRepository,
     @inject(PasswordHasherBindings.PASSWORD_HASHER)
     public passwordHasher: PasswordHasher,
-  ) {}
+  ) { }
 
   async verifyCredentials(credentials: Credentials): Promise<User> {
     const invalidCredentialsError = "Invalid email or password.";
 
     const foundUser = await this.userRepository.findOne({
-      where: {email: credentials.email},
+      where: { email: credentials.email },
     });
 
     if (!foundUser) {
@@ -49,7 +49,7 @@ export class MyUserService implements UserService<User, Credentials> {
     credentials: CredentialsForChangeId,
   ): Promise<string> {
     const foundUser = await this.userRepository.findOne({
-      where: {id: credentials.id},
+      where: { id: credentials.id },
     });
 
     if (foundUser) {
@@ -67,34 +67,7 @@ export class MyUserService implements UserService<User, Credentials> {
       userName = user.firstName
         ? `${userName} ${user.lastName}`
         : `${user.lastName}`;
-    return {[securityId]: user.id, name: userName};
+    return { [securityId]: user.id, name: userName };
   }
 }
 
-export class UserServiceForPatching {
-  constructor(
-    @repository(UserRepository) public userRepository: UserRepository,
-  ) {}
-
-  async verifyCredentialsForChangeId(
-    credentials: CredentialsForChangeId,
-  ): Promise<string> {
-    const foundUserById = await this.userRepository.findOne({
-      where: {id: credentials.id},
-    });
-
-    if (foundUserById) {
-      throw new HttpErrors.Unauthorized("Tag is already taken");
-    }
-
-    const foundUserByEmail = await this.userRepository.findOne({
-      where: {email: credentials.email},
-    });
-
-    if (!foundUserByEmail) {
-      throw new HttpErrors.Unauthorized("User not found");
-    }
-
-    return credentials.id;
-  }
-}

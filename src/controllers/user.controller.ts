@@ -3,25 +3,25 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {repository} from "@loopback/repository";
-import {validateCredentials} from "../services/validator";
-import {post, param, get, requestBody, HttpErrors} from "@loopback/rest";
-import {User} from "../models";
-import {UserRepository} from "../repositories";
-import {inject} from "@loopback/core";
+import { repository } from "@loopback/repository";
+import { validateCredentials } from "../services/validator";
+import { post, param, get, patch, requestBody, HttpErrors, getModelSchemaRef } from "@loopback/rest";
+import { User } from "../models";
+import { UserRepository } from "../repositories";
+import { inject } from "@loopback/core";
 import {
   authenticate,
   TokenService,
   UserService,
 } from "@loopback/authentication";
-import {UserProfile, securityId, SecurityBindings} from "@loopback/security";
+import { UserProfile, securityId, SecurityBindings } from "@loopback/security";
 import {
   CredentialsRequestBody,
   ChangeIdRequestBody,
   UserProfileSchema,
 } from "./specs/user-controller.specs";
-import {Credentials, CredentialsForChangeId} from "../repositories/user.repository";
-import {PasswordHasher} from "../services/hash.password.bcryptjs";
+import { Credentials, CredentialsForChangeId } from "../repositories/user.repository";
+import { PasswordHasher } from "../services/hash.password.bcryptjs";
 
 import {
   TokenServiceBindings,
@@ -29,7 +29,7 @@ import {
   UserServiceBindings,
 } from "../keys";
 import * as _ from "lodash";
-import { UserServiceForPatch } from "../services/user-service";
+import { UserServicePatching } from "../services/user-service-patching";
 
 export class UserController {
   constructor(
@@ -41,8 +41,8 @@ export class UserController {
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: UserService<User, Credentials>,
     @inject(UserServiceBindings.USER_SERVICE_FOR_PATCHING)
-    public userServicePatching: UserServiceForPatching
-  ) {}
+    public userServicePatching: UserServicePatching
+  ) { }
 
   @post("/users", {
     responses: {
@@ -98,7 +98,7 @@ export class UserController {
   })
   async findById(@param.path.string("userId") userId: string): Promise<User> {
     return this.userRepository.findById(userId, {
-      fields: {password: false},
+      fields: { password: false },
     });
   }
 
@@ -147,7 +147,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{token: string}> {
+  ): Promise<{ token: string }> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
 
@@ -157,12 +157,12 @@ export class UserController {
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
 
-    return {token};
+    return { token };
   }
 
   @patch("/users/changeid", {
-    responsed: {
-      "200": {
+    responses: {
+      "204": {
         description: "Change user tag",
         content: {
           "application/json": {
@@ -172,9 +172,34 @@ export class UserController {
       },
     },
   })
+  @authenticate('jwt')
   async changeId(
     @requestBody(ChangeIdRequestBody) credentials: CredentialsForChangeId,
-  ): Promise<User> {
-    const id = await this.userService.
+  ): Promise<string> {
+    const user = await this.userServicePatching.verifyCredentialsForChangeId(credentials);
+
+    const filter = {
+      where: { email: user.email }
+    };
+
+    try {
+      const foundUser = await this.userRepository.findOne(filter);
+      if (!foundUser) {
+        throw new HttpErrors.Unauthorized('User not found');
+      }
+    } catch (error) {
+      throw error;
+    }
+
+    try {
+
+      // await this.userRepository.updateById(user.email, user);
+      await this.userRepository.updateById(user.email, { id: "jopa" });
+      // await this.userRepository.update(user, filter);
+      return "Tag was updated successfully";
+    }
+    catch (error) {
+      throw error;
+    }
   }
 }

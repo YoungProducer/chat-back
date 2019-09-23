@@ -8,11 +8,11 @@ import {PasswordHasher} from "./services/hash.password.bcryptjs";
 import {TokenService, UserService} from "@loopback/authentication";
 import {User} from "./models";
 import {Credentials} from "./repositories";
-import {UserServiceForPatching} from "./services/user-service";
+import {I_UserServicePatching} from "./services/user-service-patching";
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = "myjwts3cr3t";
-  export const TOKEN_EXPIRES_IN_VALUE = "600";
+  export const TOKEN_EXPIRES_IN_VALUE = "216000";
 }
 
 export namespace TokenServiceBindings {
@@ -40,6 +40,6 @@ export namespace UserServiceBindings {
   );
 
   export const USER_SERVICE_FOR_PATCHING = BindingKey.create<
-    UserServiceForPatching
+    I_UserServicePatching
   >("services.user.patching.service");
 }

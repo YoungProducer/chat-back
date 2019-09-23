@@ -3,12 +3,12 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig, BindingKey} from '@loopback/core';
-import {RepositoryMixin} from '@loopback/repository';
-import {RestApplication} from '@loopback/rest';
-import {ServiceMixin} from '@loopback/service-proxy';
-import {MyAuthenticationSequence} from './sequence';
+import { BootMixin } from '@loopback/boot';
+import { ApplicationConfig, BindingKey } from '@loopback/core';
+import { RepositoryMixin } from '@loopback/repository';
+import { RestApplication } from '@loopback/rest';
+import { ServiceMixin } from '@loopback/service-proxy';
+import { MyAuthenticationSequence } from './sequence';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
@@ -18,17 +18,17 @@ import {
   UserServiceBindings,
   TokenServiceConstants,
 } from './keys';
-import {JWTService} from './services/jwt-service';
-import {MyUserService} from './services/user-service';
-
+import { JWTService } from './services/jwt-service';
+import { MyUserService } from './services/user-service';
+import { UserServicePatching } from "./services/user-service-patching"
 import * as path from 'path';
 import {
   AuthenticationComponent,
   registerAuthenticationStrategy,
 } from '@loopback/authentication';
-import {PasswordHasherBindings} from './keys';
-import {BcryptHasher} from './services/hash.password.bcryptjs';
-import {JWTAuthenticationStrategy} from './authentication-strategies/jwt-strategy';
+import { PasswordHasherBindings } from './keys';
+import { BcryptHasher } from './services/hash.password.bcryptjs';
+import { JWTAuthenticationStrategy } from './authentication-strategies/jwt-strategy';
 
 /**
  * Information from package.json
@@ -98,5 +98,6 @@ export class ShoppingApplication extends BootMixin(
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
 
     this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
+    this.bind(UserServiceBindings.USER_SERVICE_FOR_PATCHING).toClass(UserServicePatching);
   }
 }

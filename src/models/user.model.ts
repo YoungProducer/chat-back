@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Entity, model, property, hasMany} from "@loopback/repository";
-import {Order} from "./order.model";
+import { Entity, model, property, hasMany } from "@loopback/repository";
+import { Order } from "./order.model";
 
 @model({
   settings: {
@@ -23,13 +23,13 @@ import {Order} from "./order.model";
 export class User extends Entity {
   @property({
     type: "string",
-    id: true,
   })
   id: string;
 
   @property({
     type: "string",
     required: true,
+    id: true
   })
   email: string;
 
