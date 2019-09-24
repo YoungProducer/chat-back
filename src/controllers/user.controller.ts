@@ -95,7 +95,8 @@ export class UserController {
       return savedUser;
     } catch (error) {
       // MongoError 11000 duplicate key
-      if (error.code === 11000 && error.errmsg.includes("index: uniqueEmail")) {
+      // Todo: try to check the 1062 error code
+      if (error.code === 1 && error.errmsg.includes("index: uniqueEmail")) {
         throw new HttpErrors.Conflict("Email value is already taken");
       } else {
         throw error;
