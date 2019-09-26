@@ -17,17 +17,19 @@ import {
   TokenServiceBindings,
   UserServiceBindings,
   TokenServiceConstants,
+  MailerServiceBindings
 } from './keys';
 import { JWTService } from './services/jwt-service';
 import { MyUserService } from './services/user-service';
 import { UserServicePatching } from "./services/user-service-patching"
+import { BcryptHasher } from './services/hash.password.bcryptjs';
+import { MailerService } from "./services/email-service";
 import * as path from 'path';
 import {
   AuthenticationComponent,
   registerAuthenticationStrategy,
 } from '@loopback/authentication';
 import { PasswordHasherBindings } from './keys';
-import { BcryptHasher } from './services/hash.password.bcryptjs';
 import { JWTAuthenticationStrategy } from './authentication-strategies/jwt-strategy';
 
 /**
@@ -99,5 +101,7 @@ export class ShoppingApplication extends BootMixin(
 
     this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
     this.bind(UserServiceBindings.USER_SERVICE_FOR_PATCHING).toClass(UserServicePatching);
+
+    this.bind(MailerServiceBindings.MAILER_SERVICE).toClass(MailerService);
   }
 }

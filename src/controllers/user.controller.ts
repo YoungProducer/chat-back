@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {repository} from "@loopback/repository";
-import {validateCredentials} from "../services/validator";
+import { repository } from "@loopback/repository";
+import { validateCredentials } from "../services/validator";
 import {
   post,
   param,
@@ -14,15 +14,15 @@ import {
   HttpErrors,
   getModelSchemaRef,
 } from "@loopback/rest";
-import {User} from "../models";
-import {UserRepository} from "../repositories";
-import {inject} from "@loopback/core";
+import { User } from "../models";
+import { UserRepository } from "../repositories";
+import { inject } from "@loopback/core";
 import {
   authenticate,
   TokenService,
   UserService,
 } from "@loopback/authentication";
-import {UserProfile, securityId, SecurityBindings} from "@loopback/security";
+import { UserProfile, securityId, SecurityBindings } from "@loopback/security";
 import {
   CredentialsRequestBody,
   PatchingRequestBody,
@@ -32,15 +32,17 @@ import {
   Credentials,
   CredentialsForPatch,
 } from "../repositories/user.repository";
-import {PasswordHasher} from "../services/hash.password.bcryptjs";
+import { PasswordHasher } from "../services/hash.password.bcryptjs";
+import { MailerService } from "../services/email-service";
 
 import {
   TokenServiceBindings,
   PasswordHasherBindings,
   UserServiceBindings,
+  MailerServiceBindings
 } from "../keys";
 import * as _ from "lodash";
-import {UserServicePatching} from "../services/user-service-patching";
+import { I_UserServicePatching } from "../services/user-service-patching";
 
 export class UserController {
   constructor(
@@ -52,8 +54,10 @@ export class UserController {
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: UserService<User, Credentials>,
     @inject(UserServiceBindings.USER_SERVICE_FOR_PATCHING)
-    public userServicePatching: UserServicePatching,
-  ) {}
+    public userServicePatching: I_UserServicePatching,
+    @inject(MailerServiceBindings.MAILER_SERVICE)
+    public mailerService: MailerService
+  ) { }
 
   @post("/users", {
     responses: {
@@ -74,7 +78,7 @@ export class UserController {
       description: "The input of user registration",
       content: {
         "application/json": {
-          schema: getModelSchemaRef(User, {exclude: ["id"]}),
+          schema: getModelSchemaRef(User, { exclude: ["id"] }),
         },
       },
     })
@@ -91,6 +95,13 @@ export class UserController {
       // create the new user
       const savedUser = await this.userRepository.create(user);
       delete savedUser.password;
+
+      this.mailerService.sendMail({
+        from: "noreply@mess.com",
+        to: savedUser.email,
+        subject: "TestMail",
+        html: "<p>This is email</p>"
+      })
 
       return savedUser;
     } catch (error) {
@@ -120,7 +131,7 @@ export class UserController {
   })
   async findById(@param.path.string("userId") userId: number): Promise<User> {
     return this.userRepository.findById(userId, {
-      fields: {password: false},
+      fields: { password: false },
     });
   }
 
@@ -169,7 +180,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{token: string}> {
+  ): Promise<{ token: string }> {
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
 
@@ -179,7 +190,7 @@ export class UserController {
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
 
-    return {token};
+    return { token };
   }
 
   @patch("/users", {

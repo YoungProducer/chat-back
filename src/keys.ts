@@ -9,6 +9,7 @@ import {TokenService, UserService} from "@loopback/authentication";
 import {User} from "./models";
 import {Credentials} from "./repositories";
 import {I_UserServicePatching} from "./services/user-service-patching";
+import {MailerService} from "./services/email-service";
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = "myjwts3cr3t";
@@ -42,4 +43,10 @@ export namespace UserServiceBindings {
   export const USER_SERVICE_FOR_PATCHING = BindingKey.create<
     I_UserServicePatching
   >("services.user.patching.service");
+}
+
+export namespace MailerServiceBindings {
+  export const MAILER_SERVICE = BindingKey.create<MailerService>(
+    "service.mailer.service"
+  );
 }
