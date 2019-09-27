@@ -17,7 +17,8 @@ import {
   TokenServiceBindings,
   UserServiceBindings,
   TokenServiceConstants,
-  MailerServiceBindings
+  MailerServiceBindings,
+  MailreServiceConstants
 } from './keys';
 import { JWTService } from './services/jwt-service';
 import { MyUserService } from './services/user-service';
@@ -103,5 +104,13 @@ export class ShoppingApplication extends BootMixin(
     this.bind(UserServiceBindings.USER_SERVICE_FOR_PATCHING).toClass(UserServicePatching);
 
     this.bind(MailerServiceBindings.MAILER_SERVICE).toClass(MailerService);
+
+    this.bind(MailerServiceBindings.MAILER_SERVICE_USER).to(
+      MailreServiceConstants.MAILER_USER_VALUE
+    );
+
+    this.bind(MailerServiceBindings.MAILER_SERVICE_PASS).to(
+      MailreServiceConstants.MAILER_USER_PASS
+    );
   }
 }

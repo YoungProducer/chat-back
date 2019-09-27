@@ -5,11 +5,11 @@
 
 import {BindingKey} from "@loopback/context";
 import {PasswordHasher} from "./services/hash.password.bcryptjs";
-import {TokenService, UserService} from "@loopback/authentication";
+import {TokenService, UserService, authenticate} from "@loopback/authentication";
 import {User} from "./models";
 import {Credentials} from "./repositories";
 import {I_UserServicePatching} from "./services/user-service-patching";
-import {MailerService} from "./services/email-service";
+import {I_MailerService} from "./services/email-service";
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = "myjwts3cr3t";
@@ -45,8 +45,21 @@ export namespace UserServiceBindings {
   >("services.user.patching.service");
 }
 
+export namespace MailreServiceConstants {
+  export const MAILER_USER_VALUE = "sashabezrukovownmail@gmail.com";
+  export const MAILER_USER_PASS = "Sasha080701";
+}
+
 export namespace MailerServiceBindings {
-  export const MAILER_SERVICE = BindingKey.create<MailerService>(
+  export const MAILER_SERVICE = BindingKey.create<I_MailerService>(
     "service.mailer.service"
+  );
+
+  export const MAILER_SERVICE_USER = BindingKey.create<string>(
+    "authentication.mailer.user"
+  );
+
+  export const MAILER_SERVICE_PASS = BindingKey.create<string>(
+    "authentication.mailer.pass"
   );
 }

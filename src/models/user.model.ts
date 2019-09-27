@@ -49,6 +49,13 @@ export class User extends Entity {
   password: string;
 
   @property({
+    type: "boolean",
+    required: false,
+    defaultValue: true
+  })
+  emailVerified: boolean
+
+  @property({
     type: "string",
   })
   tag?: string;

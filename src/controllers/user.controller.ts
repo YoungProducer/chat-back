@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {repository} from "@loopback/repository";
-import {validateCredentials} from "../services/validator";
+import { repository } from "@loopback/repository";
+import { validateCredentials } from "../services/validator";
 import {
   post,
   param,
@@ -14,15 +14,15 @@ import {
   HttpErrors,
   getModelSchemaRef,
 } from "@loopback/rest";
-import {User} from "../models";
-import {UserRepository} from "../repositories";
-import {inject} from "@loopback/core";
+import { User } from "../models";
+import { UserRepository } from "../repositories";
+import { inject } from "@loopback/core";
 import {
   authenticate,
   TokenService,
   UserService,
 } from "@loopback/authentication";
-import {UserProfile, securityId, SecurityBindings} from "@loopback/security";
+import { UserProfile, securityId, SecurityBindings } from "@loopback/security";
 import {
   CredentialsRequestBody,
   PatchingRequestBody,
@@ -32,8 +32,8 @@ import {
   Credentials,
   CredentialsForPatch,
 } from "../repositories/user.repository";
-import {PasswordHasher} from "../services/hash.password.bcryptjs";
-import {MailerService} from "../services/email-service";
+import { PasswordHasher } from "../services/hash.password.bcryptjs";
+import { MailerService } from "../services/email-service";
 
 import {
   TokenServiceBindings,
@@ -42,10 +42,7 @@ import {
   MailerServiceBindings,
 } from "../keys";
 import * as _ from "lodash";
-import {I_UserServicePatching} from "../services/user-service-patching";
-
-//TODO: add get route email validation
-// and add request in Client part
+import { I_UserServicePatching } from "../services/user-service-patching";
 
 export class UserController {
   constructor(
@@ -60,7 +57,7 @@ export class UserController {
     public userServicePatching: I_UserServicePatching,
     @inject(MailerServiceBindings.MAILER_SERVICE)
     public mailerService: MailerService,
-  ) {}
+  ) { }
 
   @post("/users", {
     responses: {
@@ -81,7 +78,7 @@ export class UserController {
       description: "The input of user registration",
       content: {
         "application/json": {
-          schema: getModelSchemaRef(User, {exclude: ["id"]}),
+          schema: getModelSchemaRef(User, { exclude: ["id"] }),
         },
       },
     })
@@ -89,20 +86,20 @@ export class UserController {
   ): Promise<User> {
     // ensure a valid email value and password value
     validateCredentials(_.pick(user, ["email", "password"]));
+    const credentials = {
+      email: user.email,
+      password: user.password,
+    };
 
     // encrypt the password
     // eslint-disable-next-line require-atomic-updates
+    user.emailVerified = false;
     user.password = await this.passwordHasher.hashPassword(user.password);
 
     try {
       // create the new user
       const savedUser = await this.userRepository.create(user);
       delete savedUser.password;
-
-      const credentials = {
-        email: savedUser.email,
-        password: savedUser.password,
-      };
 
       // ensure the user exists, and the password is correct
       const userData = await this.userService.verifyCredentials(credentials);
@@ -113,15 +110,18 @@ export class UserController {
       // create a JSON Web Token based on the user profile
       const token = await this.jwtService.generateToken(userProfile);
 
+      //TODO: add created user id to href in email to optimization
       this.mailerService.sendMail(
         {
           from: "noreply@mess.com",
           to: savedUser.email,
           subject: "TestMail",
           html: `
-            <p>
+            <p>To confirm your email, click
               <a href="http://localhost:8080/#/validate/${token}">
+                here
               </a>
+              .
             </p>`,
         },
         user,
@@ -129,14 +129,32 @@ export class UserController {
 
       return savedUser;
     } catch (error) {
-      // MongoError 11000 duplicate key
-      // Todo: try to check the 1062 error code
       if (error.code === "ER_DUP_ENTRY") {
         throw new HttpErrors.Conflict("Email is already taken");
       } else {
         throw error;
       }
     }
+  }
+
+  @get("/validate", {
+    responses: {
+      "200": {
+        description: "Email confirmation",
+        content: {
+          "application/json": {
+            scheme: UserProfileSchema
+          }
+        }
+      }
+    }
+  })
+  @authenticate("jwt")
+  async confirmation(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile
+  ): Promise<string> {
+    return await this.mailerService.confirmEmail(currentUserProfile.email);
   }
 
   @get("/users/{userId}", {
@@ -155,7 +173,7 @@ export class UserController {
   })
   async findById(@param.path.string("userId") userId: number): Promise<User> {
     return this.userRepository.findById(userId, {
-      fields: {password: false},
+      fields: { password: false },
     });
   }
 
@@ -204,7 +222,13 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{token: string}> {
+  ): Promise<{ token: string }> {
+    const emailConfirmed = await this.mailerService.emailConfirmed(credentials.email);
+
+    if (!emailConfirmed) {
+      throw new HttpErrors.Unauthorized("Email is not confirmed.");
+    };
+
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
 
@@ -214,7 +238,7 @@ export class UserController {
     // create a JSON Web Token based on the user profile
     const token = await this.jwtService.generateToken(userProfile);
 
-    return {token};
+    return { token };
   }
 
   @patch("/users", {
