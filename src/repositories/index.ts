@@ -3,4 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-export * from './user.repository';
+export * from "./user.repository";
+export * from "./blocked-tokens.repository";
+export * from "./user.repository";
+export * from "./refresh-tokens.repository";
+export * from "./refresh-tokens.repository";

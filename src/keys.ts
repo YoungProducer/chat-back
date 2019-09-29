@@ -5,11 +5,17 @@
 
 import {BindingKey} from "@loopback/context";
 import {PasswordHasher} from "./services/hash.password.bcryptjs";
-import {TokenService, UserService, authenticate} from "@loopback/authentication";
+import {
+  TokenService,
+  UserService,
+  authenticate,
+} from "@loopback/authentication";
 import {User} from "./models";
 import {Credentials} from "./repositories";
 import {I_UserServicePatching} from "./services/user-service-patching";
 import {I_MailerService} from "./services/email-service";
+// import {I_BlacklistService} from "./services/blacklist-service";
+import {I_JWTIssueTokensPair} from "./services/jwt-service";
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = "myjwts3cr3t";
@@ -25,6 +31,9 @@ export namespace TokenServiceBindings {
   );
   export const TOKEN_SERVICE = BindingKey.create<TokenService>(
     "services.authentication.jwt.tokenservice",
+  );
+  export const TOKEN_PAIR_SERVICE = BindingKey.create<I_JWTIssueTokensPair>(
+    "services.authentication.jwt.tokenspairservice",
   );
 }
 
@@ -52,14 +61,20 @@ export namespace MailreServiceConstants {
 
 export namespace MailerServiceBindings {
   export const MAILER_SERVICE = BindingKey.create<I_MailerService>(
-    "service.mailer.service"
+    "serviceі.mailer.service",
   );
 
   export const MAILER_SERVICE_USER = BindingKey.create<string>(
-    "authentication.mailer.user"
+    "authentication.mailer.user",
   );
 
   export const MAILER_SERVICE_PASS = BindingKey.create<string>(
-    "authentication.mailer.pass"
+    "authentication.mailer.pass",
   );
+}
+
+export namespace BlacklistServiceBindings {
+  // export const BLACKLIST_SERVICE = BindingKey.create<I_BlacklistService>(
+  //   "services.blacklist.token",
+  // );
 }

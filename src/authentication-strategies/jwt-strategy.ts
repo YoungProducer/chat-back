@@ -3,14 +3,14 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {inject} from '@loopback/context';
-import {HttpErrors, Request} from '@loopback/rest';
-import {AuthenticationStrategy, TokenService} from '@loopback/authentication';
-import {UserProfile} from '@loopback/security';
-import {TokenServiceBindings} from '../keys';
+import {inject} from "@loopback/context";
+import {HttpErrors, Request} from "@loopback/rest";
+import {AuthenticationStrategy, TokenService} from "@loopback/authentication";
+import {UserProfile} from "@loopback/security";
+import {TokenServiceBindings} from "../keys";
 
 export class JWTAuthenticationStrategy implements AuthenticationStrategy {
-  name = 'jwt';
+  name = "jwt";
 
   constructor(
     @inject(TokenServiceBindings.TOKEN_SERVICE)
@@ -31,14 +31,14 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
     // for example : Bearer xxx.yyy.zzz
     const authHeaderValue = request.headers.authorization;
 
-    if (!authHeaderValue.startsWith('Bearer')) {
+    if (!authHeaderValue.startsWith("Bearer")) {
       throw new HttpErrors.Unauthorized(
         `Authorization header is not of type 'Bearer'.`,
       );
     }
 
     //split the string into 2 parts : 'Bearer ' and the `xxx.yyy.zzz`
-    const parts = authHeaderValue.split(' ');
+    const parts = authHeaderValue.split(" ");
     if (parts.length !== 2)
       throw new HttpErrors.Unauthorized(
         `Authorization header value has too many parts. It must follow the pattern: 'Bearer xx.yy.zz' where xx.yy.zz is a valid JWT token.`,

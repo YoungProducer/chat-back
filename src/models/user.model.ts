@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import { Entity, model, property, hasMany } from "@loopback/repository";
-import { Order } from "./order.model";
+import {Entity, model, property, hasMany} from "@loopback/repository";
+import {Token} from "../models";
 
 @model({
   settings: {
@@ -51,9 +51,9 @@ export class User extends Entity {
   @property({
     type: "boolean",
     required: false,
-    defaultValue: true
+    defaultValue: true,
   })
-  emailVerified: boolean
+  emailVerified: boolean;
 
   @property({
     type: "string",
@@ -69,6 +69,12 @@ export class User extends Entity {
     type: "string",
   })
   lastName?: string;
+
+  @hasMany(() => Token)
+  refreshTokens: Token[];
+
+  // @hasMany(() => Token)
+  // blockedTokens: Token[];
 
   constructor(data?: Partial<User>) {
     super(data);

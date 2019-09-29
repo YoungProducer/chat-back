@@ -1,7 +1,7 @@
-// Copyright IBM Corp. 2018. All Rights Reserved.
-// Node module: loopback4-example-shopping
-// This file is licensed under the MIT License.
-// License text available at https://opensource.org/licenses/MIT
+// import {DefaultCrudRepository} from '@loopback/repository';
+// import {User, UserRelations} from '../models';
+// import {TokensBlackListDataSource} from '../datasources';
+// import {inject} from '@loopback/core';
 
 import {
   DefaultCrudRepository,
@@ -9,8 +9,12 @@ import {
   HasManyRepositoryFactory,
   repository,
 } from "@loopback/repository";
-import {User} from "../models";
+import {User, Token} from "../models";
 import {inject} from "@loopback/core";
+import {
+  BlockedTokensRepository,
+  RefreshTokensRepository,
+} from "../repositories";
 
 export type Credentials = {
   email: string;
@@ -31,9 +35,44 @@ export class UserRepository extends DefaultCrudRepository<
   User,
   typeof User.prototype.id
 > {
+  public blockedTokens: HasManyRepositoryFactory<
+    Token,
+    typeof User.prototype.id
+  >;
+  public refreshTokens: HasManyRepositoryFactory<
+    Token,
+    typeof User.prototype.id
+  >;
+
   constructor(
     @inject("datasources.mongo") protected datasource: juggler.DataSource,
+    @repository(RefreshTokensRepository)
+    protected refreshTokensRepository: RefreshTokensRepository,
+    @repository(BlockedTokensRepository)
+    protected blockedTokensRepository: BlockedTokensRepository,
   ) {
     super(User, datasource);
+
+    this.refreshTokens = this.createHasManyRepositoryFactoryFor(
+      "refresTokens",
+      async () => refreshTokensRepository,
+    );
+
+    this.blockedTokens = this.createHasManyRepositoryFactoryFor(
+      "blockedTokens",
+      async () => blockedTokensRepository,
+    );
   }
 }
+
+// export class UserRepository extends DefaultCrudRepository<
+//   User,
+//   typeof User.prototype.id,
+//   UserRelations
+// > {
+//   constructor(
+//     @inject('datasources.TokensBlackList') dataSource: TokensBlackListDataSource,
+//   ) {
+//     super(User, dataSource);
+//   }
+// }

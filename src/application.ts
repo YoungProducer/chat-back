@@ -3,35 +3,37 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import { BootMixin } from '@loopback/boot';
-import { ApplicationConfig, BindingKey } from '@loopback/core';
-import { RepositoryMixin } from '@loopback/repository';
-import { RestApplication } from '@loopback/rest';
-import { ServiceMixin } from '@loopback/service-proxy';
-import { MyAuthenticationSequence } from './sequence';
+import {BootMixin} from "@loopback/boot";
+import {ApplicationConfig, BindingKey} from "@loopback/core";
+import {RepositoryMixin} from "@loopback/repository";
+import {RestApplication} from "@loopback/rest";
+import {ServiceMixin} from "@loopback/service-proxy";
+import {MyAuthenticationSequence} from "./sequence";
 import {
   RestExplorerBindings,
   RestExplorerComponent,
-} from '@loopback/rest-explorer';
+} from "@loopback/rest-explorer";
 import {
   TokenServiceBindings,
   UserServiceBindings,
   TokenServiceConstants,
   MailerServiceBindings,
-  MailreServiceConstants
-} from './keys';
-import { JWTService } from './services/jwt-service';
-import { MyUserService } from './services/user-service';
-import { UserServicePatching } from "./services/user-service-patching"
-import { BcryptHasher } from './services/hash.password.bcryptjs';
-import { MailerService } from "./services/email-service";
-import * as path from 'path';
+  MailreServiceConstants,
+  BlacklistServiceBindings,
+} from "./keys";
+import {JWTService, JWTTokensPairService} from "./services/jwt-service";
+import {MyUserService} from "./services/user-service";
+import {UserServicePatching} from "./services/user-service-patching";
+import {BcryptHasher} from "./services/hash.password.bcryptjs";
+import {MailerService} from "./services/email-service";
+import * as path from "path";
 import {
   AuthenticationComponent,
   registerAuthenticationStrategy,
-} from '@loopback/authentication';
-import { PasswordHasherBindings } from './keys';
-import { JWTAuthenticationStrategy } from './authentication-strategies/jwt-strategy';
+} from "@loopback/authentication";
+import {PasswordHasherBindings} from "./keys";
+import {JWTAuthenticationStrategy} from "./authentication-strategies/jwt-strategy";
+// import {BlacklistService} from "./services/blacklist-service";
 
 /**
  * Information from package.json
@@ -41,9 +43,9 @@ export interface PackageInfo {
   version: string;
   description: string;
 }
-export const PackageKey = BindingKey.create<PackageInfo>('application.package');
+export const PackageKey = BindingKey.create<PackageInfo>("application.package");
 
-const pkg: PackageInfo = require('../package.json');
+const pkg: PackageInfo = require("../package.json");
 
 export class ShoppingApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
@@ -62,11 +64,11 @@ export class ShoppingApplication extends BootMixin(
     this.sequence(MyAuthenticationSequence);
 
     // Set up default home page
-    this.static('/', path.join(__dirname, '../public'));
+    this.static("/", path.join(__dirname, "../public"));
 
     // Customize @loopback/rest-explorer configuration here
     this.bind(RestExplorerBindings.CONFIG).to({
-      path: '/explorer',
+      path: "/explorer",
     });
     this.component(RestExplorerComponent);
 
@@ -75,8 +77,8 @@ export class ShoppingApplication extends BootMixin(
     this.bootOptions = {
       controllers: {
         // Customize ControllerBooter Conventions here
-        dirs: ['controllers'],
-        extensions: ['.controller.js'],
+        dirs: ["controllers"],
+        extensions: [".controller.js"],
         nested: true,
       },
     };
@@ -95,22 +97,33 @@ export class ShoppingApplication extends BootMixin(
     );
 
     this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
+    this.bind(TokenServiceBindings.TOKEN_PAIR_SERVICE).toClass(
+      JWTTokensPairService,
+    );
 
     // // Bind bcrypt hash services
     this.bind(PasswordHasherBindings.ROUNDS).to(10);
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
 
     this.bind(UserServiceBindings.USER_SERVICE).toClass(MyUserService);
-    this.bind(UserServiceBindings.USER_SERVICE_FOR_PATCHING).toClass(UserServicePatching);
+    this.bind(UserServiceBindings.USER_SERVICE_FOR_PATCHING).toClass(
+      UserServicePatching,
+    );
 
+    // Bind mailer services
     this.bind(MailerServiceBindings.MAILER_SERVICE).toClass(MailerService);
 
     this.bind(MailerServiceBindings.MAILER_SERVICE_USER).to(
-      MailreServiceConstants.MAILER_USER_VALUE
+      MailreServiceConstants.MAILER_USER_VALUE,
     );
 
     this.bind(MailerServiceBindings.MAILER_SERVICE_PASS).to(
-      MailreServiceConstants.MAILER_USER_PASS
+      MailreServiceConstants.MAILER_USER_PASS,
     );
+
+    // Bind blacklist services
+    // this.bind(BlacklistServiceBindings.BLACKLIST_SERVICE).toClass(
+    //   BlacklistService,
+    // );
   }
 }

@@ -4,3 +4,6 @@
 // License text available at https://opensource.org/licenses/MIT
 
 export * from './user.model';
+export * from './blocked-token.model';
+export * from './refresh-token.model';
+export * from './token.model';

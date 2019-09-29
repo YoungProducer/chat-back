@@ -1,19 +1,23 @@
-import { SentMessageInfo, createTransport } from "nodemailer";
+import {SentMessageInfo, createTransport} from "nodemailer";
 import Mail = require("nodemailer/lib/mailer");
-import { inject } from "@loopback/core";
-import { TokenService, UserService } from "@loopback/authentication";
-import { TokenServiceBindings, UserServiceBindings, MailerServiceBindings } from "../keys";
-import { JWTService } from "./jwt-service";
-import { UserProfile, securityId } from "@loopback/security";
-import { repository } from "@loopback/repository";
-import { UserRepository, Credentials } from "../repositories";
-import { User } from "../models/user.model";
-import { HttpErrors } from "@loopback/rest";
+import {inject} from "@loopback/core";
+import {TokenService, UserService} from "@loopback/authentication";
+import {
+  TokenServiceBindings,
+  UserServiceBindings,
+  MailerServiceBindings,
+} from "../keys";
+import {JWTService} from "./jwt-service";
+import {UserProfile, securityId} from "@loopback/security";
+import {repository} from "@loopback/repository";
+import {UserRepository, Credentials} from "../repositories";
+import {User} from "../models/user.model";
+import {HttpErrors} from "@loopback/rest";
 
 export interface I_MailerService {
-  sendMail(mailOptions: Mail.Options, user: User): Promise<SentMessageInfo>,
-  confirmEmail(email: string | undefined): Promise<string>,
-  emailConfirmed(email: string | undefined): Promise<boolean>
+  sendMail(mailOptions: Mail.Options, user: User): Promise<SentMessageInfo>;
+  confirmEmail(id: number, email: string | undefined): Promise<string>;
+  emailConfirmed(email: string | undefined): Promise<boolean>;
 }
 
 export class MailerService implements I_MailerService {
@@ -23,16 +27,16 @@ export class MailerService implements I_MailerService {
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: UserService<User, Credentials>,
     @inject(MailerServiceBindings.MAILER_SERVICE_USER)
-    public mailerUser: string,
+    private mailerUser: string,
     @inject(MailerServiceBindings.MAILER_SERVICE_PASS)
-    public mailerPass: string,
+    private mailerPass: string,
     @inject(TokenServiceBindings.TOKEN_SERVICE)
-    public jwtService: TokenService,
+    private jwtService: TokenService,
     @inject(TokenServiceBindings.TOKEN_EXPIRES_IN)
-    public jwtExpiresIn: string,
+    private jwtExpiresIn: string,
     @inject(TokenServiceBindings.TOKEN_SECRET)
-    public jwtSecret: string,
-  ) { }
+    private jwtSecret: string,
+  ) {}
 
   async sendMail(
     mailOptions: Mail.Options,
@@ -83,21 +87,18 @@ export class MailerService implements I_MailerService {
     });
   }
 
-  async confirmEmail(email: string | undefined): Promise<string> {
-    const foundUser = await this.userRepository.findOne({
-      where: {
-        email: email
-      }
-    });
+  async confirmEmail(id: number, email: string | undefined): Promise<string> {
+    const foundUser = await this.userRepository.findById(id);
 
-    if (foundUser === null) {
-      throw new HttpErrors.Unauthorized("User not found");
-    }
+    // if (foundUser.email !== email) {
+    //   throw new HttpErrors.Unauthorized(
+    //     `User not found ${foundUser.email} !== ${email}`,
+    //   );
+    // }
 
     foundUser.emailVerified = true;
 
     try {
-      const id = foundUser.id;
       delete foundUser.id;
       await this.userRepository.updateById(id, foundUser);
       return "Email verified successfully";
@@ -109,8 +110,8 @@ export class MailerService implements I_MailerService {
   async emailConfirmed(email: string | undefined): Promise<boolean> {
     const foundUser = await this.userRepository.findOne({
       where: {
-        email: email
-      }
+        email: email,
+      },
     });
 
     if (foundUser === null) {
