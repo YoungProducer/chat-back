@@ -9,8 +9,9 @@ import {
   HasManyRepositoryFactory,
   repository,
 } from "@loopback/repository";
-import {User} from "../models";
-import {inject} from "@loopback/core";
+import { User, Token } from "../models";
+import { inject } from "@loopback/core";
+import { RefreshTokensRepository } from "./refresh-token.repository";
 
 export type Credentials = {
   email: string;
@@ -30,10 +31,22 @@ export type CredentialsForPatch = {
 export class UserRepository extends DefaultCrudRepository<
   User,
   typeof User.prototype.id
-> {
+  > {
+  public refreshTokens: HasManyRepositoryFactory<
+    Token,
+    typeof User.prototype.id
+  >;
+
   constructor(
     @inject("datasources.mongo") protected datasource: juggler.DataSource,
+    @repository(RefreshTokensRepository)
+    protected refreshTokensRepository: RefreshTokensRepository,
   ) {
     super(User, datasource);
+
+    this.refreshTokens = this.createHasManyRepositoryFactoryFor(
+      "refreshTokens",
+      async () => refreshTokensRepository
+    );
   }
 }

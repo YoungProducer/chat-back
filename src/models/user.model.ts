@@ -5,6 +5,7 @@
 
 import { Entity, model, property, hasMany } from "@loopback/repository";
 import { Order } from "./order.model";
+import { Token } from "./"
 
 @model({
   settings: {
@@ -69,6 +70,9 @@ export class User extends Entity {
     type: "string",
   })
   lastName?: string;
+
+  @hasMany(() => Token)
+  refreshTokens: Token[];
 
   constructor(data?: Partial<User>) {
     super(data);

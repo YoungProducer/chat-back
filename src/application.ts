@@ -25,6 +25,7 @@ import { MyUserService } from './services/user-service';
 import { UserServicePatching } from "./services/user-service-patching"
 import { BcryptHasher } from './services/hash.password.bcryptjs';
 import { MailerService } from "./services/email-service";
+import { JWTRefreshService } from "./services/jwt-pair-service";
 import * as path from 'path';
 import {
   AuthenticationComponent,
@@ -32,6 +33,7 @@ import {
 } from '@loopback/authentication';
 import { PasswordHasherBindings } from './keys';
 import { JWTAuthenticationStrategy } from './authentication-strategies/jwt-strategy';
+import { JWTRefreshAuthenticationStrategy } from "./authentication-strategies/jwt-refresh-strategy";
 
 /**
  * Information from package.json
@@ -57,6 +59,7 @@ export class ShoppingApplication extends BootMixin(
     this.component(AuthenticationComponent);
 
     registerAuthenticationStrategy(this, JWTAuthenticationStrategy);
+    registerAuthenticationStrategy(this, JWTRefreshAuthenticationStrategy);
 
     // Set up the custom sequence
     this.sequence(MyAuthenticationSequence);
@@ -96,6 +99,9 @@ export class ShoppingApplication extends BootMixin(
 
     this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
 
+    this.bind(TokenServiceBindings.TOKEN_REFRESH_SERVICE).toClass(
+      JWTRefreshService
+    );
     // // Bind bcrypt hash services
     this.bind(PasswordHasherBindings.ROUNDS).to(10);
     this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);

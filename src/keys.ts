@@ -10,6 +10,7 @@ import {User} from "./models";
 import {Credentials} from "./repositories";
 import {I_UserServicePatching} from "./services/user-service-patching";
 import {I_MailerService} from "./services/email-service";
+import {I_TokenRefreshService} from "./services/jwt-pair-service";
 
 export namespace TokenServiceConstants {
   export const TOKEN_SECRET_VALUE = "myjwts3cr3t";
@@ -26,6 +27,9 @@ export namespace TokenServiceBindings {
   export const TOKEN_SERVICE = BindingKey.create<TokenService>(
     "services.authentication.jwt.tokenservice",
   );
+  export const TOKEN_REFRESH_SERVICE = BindingKey.create<I_TokenRefreshService>(
+    "services.authentication.jwt.refreshtokenservice"
+  )
 }
 
 export namespace PasswordHasherBindings {

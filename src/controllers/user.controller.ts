@@ -43,6 +43,7 @@ import {
 } from "../keys";
 import * as _ from "lodash";
 import { I_UserServicePatching } from "../services/user-service-patching";
+import { I_TokenRefreshService } from "../services/jwt-pair-service";
 
 export class UserController {
   constructor(
@@ -51,6 +52,8 @@ export class UserController {
     public passwordHasher: PasswordHasher,
     @inject(TokenServiceBindings.TOKEN_SERVICE)
     public jwtService: TokenService,
+    @inject(TokenServiceBindings.TOKEN_REFRESH_SERVICE)
+    public jwtRefreshService: I_TokenRefreshService,
     @inject(UserServiceBindings.USER_SERVICE)
     public userService: UserService<User, Credentials>,
     @inject(UserServiceBindings.USER_SERVICE_FOR_PATCHING)
@@ -210,9 +213,12 @@ export class UserController {
             schema: {
               type: "object",
               properties: {
-                token: {
+                accessToken: {
                   type: "string",
                 },
+                refreshToken: {
+                  type: "string"
+                }
               },
             },
           },
@@ -222,7 +228,7 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{ token: string }> {
+  ): Promise<{ accessToken: string, refreshToken: string }> {
     const emailConfirmed = await this.mailerService.emailConfirmed(credentials.email);
 
     if (!emailConfirmed) {
@@ -236,9 +242,10 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
 
     // create a JSON Web Token based on the user profile
-    const token = await this.jwtService.generateToken(userProfile);
+    const accessToken = await this.jwtService.generateToken(userProfile);
+    const refreshToken = await this.jwtRefreshService.generateRefreshToken(user.id);
 
-    return { token };
+    return { accessToken, refreshToken };
   }
 
   @patch("/users", {
