@@ -3,8 +3,8 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import { repository } from "@loopback/repository";
-import { validateCredentials } from "../services/validator";
+import {repository} from "@loopback/repository";
+import {validateCredentials} from "../services/validator";
 import {
   post,
   param,
@@ -14,15 +14,15 @@ import {
   HttpErrors,
   getModelSchemaRef,
 } from "@loopback/rest";
-import { User } from "../models";
-import { UserRepository } from "../repositories";
-import { inject } from "@loopback/core";
+import {User} from "../models";
+import {UserRepository} from "../repositories";
+import {inject} from "@loopback/core";
 import {
   authenticate,
   TokenService,
   UserService,
 } from "@loopback/authentication";
-import { UserProfile, securityId, SecurityBindings } from "@loopback/security";
+import {UserProfile, securityId, SecurityBindings} from "@loopback/security";
 import {
   CredentialsRequestBody,
   PatchingRequestBody,
@@ -32,8 +32,8 @@ import {
   Credentials,
   CredentialsForPatch,
 } from "../repositories/user.repository";
-import { PasswordHasher } from "../services/hash.password.bcryptjs";
-import { MailerService } from "../services/email-service";
+import {PasswordHasher} from "../services/hash.password.bcryptjs";
+import {MailerService} from "../services/email-service";
 
 import {
   TokenServiceBindings,
@@ -42,8 +42,8 @@ import {
   MailerServiceBindings,
 } from "../keys";
 import * as _ from "lodash";
-import { I_UserServicePatching } from "../services/user-service-patching";
-import { I_TokenRefreshService } from "../services/jwt-pair-service";
+import {I_UserServicePatching} from "../services/user-service-patching";
+import {I_TokenRefreshService} from "../services/jwt-pair-service";
 
 export class UserController {
   constructor(
@@ -60,7 +60,7 @@ export class UserController {
     public userServicePatching: I_UserServicePatching,
     @inject(MailerServiceBindings.MAILER_SERVICE)
     public mailerService: MailerService,
-  ) { }
+  ) {}
 
   @post("/users", {
     responses: {
@@ -81,7 +81,7 @@ export class UserController {
       description: "The input of user registration",
       content: {
         "application/json": {
-          schema: getModelSchemaRef(User, { exclude: ["id"] }),
+          schema: getModelSchemaRef(User, {exclude: ["id"]}),
         },
       },
     })
@@ -121,7 +121,7 @@ export class UserController {
           subject: "TestMail",
           html: `
             <p>To confirm your email, click
-              <a href="http://localhost:8080/#/validate/${token}">
+              <a href="http://localhost:8080/#/validate/${token}?userId=${savedUser.id}">
                 here
               </a>
               .
@@ -140,24 +140,25 @@ export class UserController {
     }
   }
 
-  @get("/validate", {
+  @get("/validate/{userId}", {
     responses: {
       "200": {
         description: "Email confirmation",
         content: {
           "application/json": {
-            scheme: UserProfileSchema
-          }
-        }
-      }
-    }
+            scheme: UserProfileSchema,
+          },
+        },
+      },
+    },
   })
   @authenticate("jwt")
   async confirmation(
+    @param.path.number("userId") userId: number,
     @inject(SecurityBindings.USER)
-    currentUserProfile: UserProfile
+    currentUserProfile: UserProfile,
   ): Promise<string> {
-    return await this.mailerService.confirmEmail(currentUserProfile.email);
+    return await this.mailerService.confirmEmail(userId);
   }
 
   @get("/users/{userId}", {
@@ -176,7 +177,7 @@ export class UserController {
   })
   async findById(@param.path.string("userId") userId: number): Promise<User> {
     return this.userRepository.findById(userId, {
-      fields: { password: false },
+      fields: {password: false},
     });
   }
 
@@ -217,8 +218,8 @@ export class UserController {
                   type: "string",
                 },
                 refreshToken: {
-                  type: "string"
-                }
+                  type: "string",
+                },
               },
             },
           },
@@ -228,12 +229,14 @@ export class UserController {
   })
   async login(
     @requestBody(CredentialsRequestBody) credentials: Credentials,
-  ): Promise<{ accessToken: string, refreshToken: string }> {
-    const emailConfirmed = await this.mailerService.emailConfirmed(credentials.email);
+  ): Promise<{accessToken: string; refreshToken: string}> {
+    const emailConfirmed = await this.mailerService.emailConfirmed(
+      credentials.email,
+    );
 
     if (!emailConfirmed) {
       throw new HttpErrors.Unauthorized("Email is not confirmed.");
-    };
+    }
 
     // ensure the user exists, and the password is correct
     const user = await this.userService.verifyCredentials(credentials);
@@ -243,9 +246,11 @@ export class UserController {
 
     // create a JSON Web Token based on the user profile
     const accessToken = await this.jwtService.generateToken(userProfile);
-    const refreshToken = await this.jwtRefreshService.generateRefreshToken(user.id);
+    const refreshToken = await this.jwtRefreshService.generateRefreshToken(
+      user.id,
+    );
 
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken};
   }
 
   @patch("/users", {

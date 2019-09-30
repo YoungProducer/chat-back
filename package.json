@@ -97,7 +97,7 @@
     "source-map-support": "0.5.13",
     "typescript": "3.6.3"
   },
-  "copyright.owner": "IBM Corp.",
+  "copyright.owner": "Young Prod Corp.",
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
